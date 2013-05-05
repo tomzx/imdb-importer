@@ -63,3 +63,8 @@ The expected JSON input format is pretty simple and minimalist. It is an array o
   }
 ]
 ```
+
+License
+-------
+
+The code is licensed under the MIT license (http://opensource.org/licenses/MIT). See license.txt.
