@@ -122,7 +122,7 @@ class ImdbImporter
 	{
 		echo 'Submitting rating for '.$rating['title'].PHP_EOL;
 
-		$cookie_details = array('id' => $this->id);
+		$cookie_details = ['id' => $this->id];
 
 		$imdb_rating = floor($rating['rating'] / $this->rating_base * 10);
 
