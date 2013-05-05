@@ -5,6 +5,11 @@ The IMDB ratings importer is pretty straightforward. It allows you to import you
 
 This importer was written so that I could import my ratings from other movie tracking websites (such as Rotten Tomatoes) onto IMDB.
 
+Requirements
+------------
+
+* PHP 5.4 <
+
 How to use
 ----------
 
