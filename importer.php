@@ -12,27 +12,22 @@ function http_build_cookie(array $data)
 
 class ImdbImporter
 {
-	private $input = null;
 	private $id = null;
 	private $rating_base = 10;
 
-	public function __construct($input, $id, $rating_base = 10)
+	public function __construct($id, $rating_base = 10)
 	{
-		$this->input = $input;
 		$this->id = $id;
 		$this->rating_base = $rating_base;
 	}
 
-	public function submit()
+	public function submit(array $ratings)
 	{
 		// http://www.imdb.com/ratings/_ajax/title
 		// tconst = movie id (tt3123123)
 		// rating = your rating on 10
 		// auth = auth key to submit
 		// tracking_tag = 'title-maindetails'
-
-		$ratings = json_decode(file_get_contents($this->input), true);
-
 		foreach ($ratings as $rating)
 		{
 			echo 'Fetching submission details for '.$rating['title'].PHP_EOL;
@@ -53,7 +48,17 @@ class ImdbImporter
 
 		$content = file_get_contents('http://www.imdb.com/xml/find?json=1&nr=1&tt=on&q='.$imdb_title);
 
+		if ($content === false)
+		{
+			throw new Exception('Error while fetching tconst for '.$rating['title'].'.');
+		}
+
 		$json = json_decode($content, true);
+
+		if ($json === null)
+		{
+			throw new Exception('Could not decode json result for '.$rating['title'].'.');
+		}
 
 		// title_popular, title_exact, title_approx
 		// TODO: If we fail to find the exact title, try the next category until we've gone through them all
