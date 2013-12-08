@@ -1,0 +1,33 @@
+{
+    "name": "tomzx/imdb-importer",
+    "description": "IMDb ratings importer",
+    "type": "library",
+    "keywords": [
+        "imdb",
+        "ratings",
+        "importer"
+    ],
+    "homepage": "https://github.com/tomzx/imdb-importer",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tom Rochette",
+            "email": "tom@tomrochette.com",
+            "homepage": "http://www.tomrochette.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/tomzx/imdb-importer/issues"
+    },
+    "require": {
+        "php": ">=5.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "IMDbImporter": "src/"
+        }
+    }
+}

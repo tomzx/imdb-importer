@@ -1,6 +1,8 @@
 <?php
 
-class ImdbImporter
+namespace ImdbImporter;
+
+class Importer
 {
 	private $id = null;
 	private $rating_base = 10;
@@ -10,7 +12,7 @@ class ImdbImporter
 		$this->id = $id;
 		$this->rating_base = $rating_base;
 		if ($rating_base <= 0) {
-			throw new Exception('Invalid rating base value '.$rating_base.'. Rating base must be positive.');
+			throw new \Exception('Invalid rating base value '.$rating_base.'. Rating base must be positive.');
 		}
 	}
 
@@ -43,14 +45,14 @@ class ImdbImporter
 
 		if ($content === false)
 		{
-			throw new Exception('Error while fetching tconst for '.$rating['title'].'.');
+			throw new \Exception('Error while fetching tconst for '.$rating['title'].'.');
 		}
 
 		$json = json_decode($content, true);
 
 		if ($json === null)
 		{
-			throw new Exception('Could not decode json result for '.$rating['title'].'.');
+			throw new \Exception('Could not decode json result for '.$rating['title'].'.');
 		}
 
 		// title_popular, title_exact, title_approx
@@ -143,7 +145,7 @@ class ImdbImporter
 		echo 'Submitted to http://www.imdb.com/title/'.$tconst.PHP_EOL;
 	}
 
-	public function http_build_cookie(array $data)
+	private function http_build_cookie(array $data)
 	{
 		$cookie_string = '';
 		foreach ($data as $key => $value)
