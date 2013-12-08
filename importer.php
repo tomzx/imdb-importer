@@ -1,15 +1,5 @@
 <?php
 
-function http_build_cookie(array $data)
-{
-	$cookie_string = '';
-	foreach ($data as $key => $value)
-	{
-		$cookie_string .= $key.'='.$value.';';
-	}
-	return $cookie_string;
-}
-
 class ImdbImporter
 {
 	private $id = null;
@@ -19,6 +9,9 @@ class ImdbImporter
 	{
 		$this->id = $id;
 		$this->rating_base = $rating_base;
+		if ($rating_base <= 0) {
+			throw new Exception('Invalid rating base value '.$rating_base.'. Rating base must be positive.');
+		}
 	}
 
 	public function submit(array $ratings)
@@ -30,7 +23,7 @@ class ImdbImporter
 		// tracking_tag = 'title-maindetails'
 		foreach ($ratings as $rating)
 		{
-			echo 'Fetching submission details for '.$rating['title'].PHP_EOL;
+			echo 'Fetching submission details for "'.$rating['title'].'"'.PHP_EOL;
 
 			$tconst = $this->get_tconst($rating);
 
@@ -76,7 +69,7 @@ class ImdbImporter
 		}
 		else
 		{
-			continue;
+			return null;
 		}
 
 		// Check title matches
@@ -85,7 +78,7 @@ class ImdbImporter
 		foreach ($json[$type] as $movie)
 		{
 			++$i;
-			if ($movie['title'] === $rating['title'])
+			if (strcasecmp($movie['title'], $rating['title']) === 0)
 			{
 				$matched_title_index = $i;
 				break;
@@ -105,12 +98,12 @@ class ImdbImporter
 	{
 		$cookie_details = ['id' => $this->id];
 
-		$context_options = ['http' =>
-								[
-								'method' => 'GET',
-								'header' => 'Cookie: '.http_build_cookie($cookie_details)
-								]
-							];
+		$context_options = [
+			'http' => [
+				'method' => 'GET',
+				'header' => 'Cookie: '.$this->http_build_cookie($cookie_details)
+			]
+		];
 		$context = stream_context_create($context_options);
 
 		$page_url = 'http://www.imdb.com/title/'.$tconst;
@@ -133,20 +126,30 @@ class ImdbImporter
 
 		$data = ['tconst' => $tconst, 'rating' => $imdb_rating, 'auth' => $auth, 'tracking_tag' => 'title-maindetails'];
 		$data = http_build_query($data);
-		$context_options = ['http' =>
-								[
-								'method' => 'POST',
-								'header' => 'Cookie: '.http_build_cookie($cookie_details)."\r\n".
-								'Content-type: application/x-www-form-urlencoded'."\r\n".
-								'Content-Length: '.strlen($data),
-								'content' => $data
-								]
-							];
+		$context_options = [
+			'http' => [
+				'method' => 'POST',
+				'header' => 'Cookie: '.$this->http_build_cookie($cookie_details)."\r\n".
+				'Content-type: application/x-www-form-urlencoded'."\r\n".
+				'Content-Length: '.strlen($data),
+				'content' => $data
+			]
+		];
 		$context = stream_context_create($context_options);
 
 		$page_url = 'http://www.imdb.com/ratings/_ajax/title';
 		$page_content = file_get_contents($page_url, false, $context);
 
 		echo 'Submitted to http://www.imdb.com/title/'.$tconst.PHP_EOL;
+	}
+
+	public function http_build_cookie(array $data)
+	{
+		$cookie_string = '';
+		foreach ($data as $key => $value)
+		{
+			$cookie_string .= $key.'='.$value.';';
+		}
+		return $cookie_string;
 	}
 }
