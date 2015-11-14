@@ -2,10 +2,14 @@
 
 namespace ImdbImporter;
 
-class Importer
+use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareInterface;
+
+class Importer implements LoggerAwareInterface
 {
 	private $id = null;
 	private $rating_base = 10;
+    private $logger;
 
 	public function __construct($id, $rating_base = 10)
 	{
@@ -30,17 +34,12 @@ class Importer
      */
 	public function submit(array $ratings)
 	{
-		// http://www.imdb.com/ratings/_ajax/title
-		// tconst = movie id (tt3123123)
-		// rating = your rating on 10
-		// auth = auth key to submit
-		// tracking_tag = 'title-maindetails'
 		foreach ($ratings as $rating)
 		{
             if (isset($rating['id'])) {
                 $tconst = $this->formatImdbID($rating['id']);
             } else {
-                echo "Searching for $rating[title]" . PHP_EOL;
+                $this->getLogger()->debug("Searching for $rating[title]");
                 $tconst = $this->getIdByTitle($rating['title']);
             }
 
@@ -51,6 +50,11 @@ class Importer
 			$this->submit_rating($rating, $tconst, $auth);
 		}
 	}
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
 
 	private function getIdByTitle($title)
 	{
@@ -86,6 +90,7 @@ class Importer
 		}
 		else
 		{
+            $this->getLogger()->warning('Could not find title "' . $title . '"');
 			return null;
 		}
 
@@ -104,7 +109,7 @@ class Importer
 
 		if ($matched_title_index === -1)
 		{
-			echo 'Non matching title ' . $title.PHP_EOL;
+			$this->getLogger()->warning('Could not find title "' . $title . '"');
 			return null;
 		}
 
@@ -135,7 +140,7 @@ class Importer
 
 	private function submit_rating($rating, $tconst, $auth)
 	{
-		echo 'Submitting rating for '. isset($rating['title']) ? $rating['title'] : $rating['id'] .PHP_EOL;
+        $this->getLogger()->debug("Submitting rating for " . json_encode($rating) . " $tconst");
 
 		$cookie_details = ['id' => $this->id];
 
@@ -157,7 +162,7 @@ class Importer
 		$page_url = 'http://www.imdb.com/ratings/_ajax/title';
 		$page_content = file_get_contents($page_url, false, $context);
 
-		echo 'Submitted to http://www.imdb.com/title/'.$tconst.PHP_EOL;
+        $this->getLogger()->info('Submitted rating for '. (isset($rating['title']) ? $rating['title'] : $rating['id']));
 	}
 
 	private function http_build_cookie(array $data)
@@ -185,5 +190,17 @@ class Importer
         }
 
         throw new \Exception("Failed to validate [$id] as an IMDb ID");
+    }
+
+    /**
+     * @return Psr\Log\LoggerInterface
+     */
+    private function getLogger()
+    {
+        if (!$this->logger) {
+            $this->logger = new Logger();
+        }
+
+        return $this->logger;
     }
 }
