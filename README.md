@@ -1,17 +1,14 @@
-IMDb ratings importer
-=========
+# IMDb ratings importer
 
 The IMDb ratings importer is pretty straightforward. It allows you to import your rating from a json file onto the website itself.
 
 This importer was written so that I could import my ratings from other movie tracking websites (such as Rotten Tomatoes) onto IMDb.
 
-Requirements
-------------
+## Requirements
 
 * PHP 5.4 <
 
-How to use
-----------
+## How to use
 
 In order to use the exporter, you will need to do a couple of things:
 
@@ -21,7 +18,9 @@ In order to use the exporter, you will need to do a couple of things:
 
 ```php
 <?php
-require_once 'importer.php';
+require_once 'vendor/autoload.php';
+
+use ImdbImporter\Importer;
 
 // Change FILE to the location of your input json data file
 $input = json_decode(file_get_contents('FILE.json'));
@@ -32,29 +31,29 @@ $id = 'ID_FROM_COOKIE';
 // Change RATING_BASE
 $rating_base = RATING_BASE;
 
-$importer = new IMDbImporter($id, $rating_base);
+$importer = new Importer($id, $rating_base);
 $importer->submit($input);
 ```
 
-Example
--------
+## Example
 
 ```php
 <?php
-require_once 'importer.php';
+require_once 'vendor/autoload.php';
+
+use ImdbImporter\Importer;
 
 $input = json_decode(file_get_contents('my_ratings.json'));
 $id = 'BCYj3D0pzQplRCdWOk999sALuG13hRj53tUCHy5SPlDT7GjcRHw0K-CWnzGsJPg8VC5jEw64mlaSucVtkCjKhvKZYO2SQ0CSTbspanBkgCdqHwRAlx_3h64JcwJLcU3Mmz2OTPr6BC7zrHzozJZ0BcsTNeEXLcsggl7-RsEIFYEnqdE';
 $rating_base = 5;
 
-$importer = new IMDbImporter($id, $rating_base);
+$importer = new Importer($id, $rating_base);
 $importer->submit($input);
 ```
 
-3. Done! All the movies that are in your JSON input file should be now rated on IMDb.
+Done! All the movies that are in your JSON input file should be now rated on IMDb.
 
-Input format
-------------------
+## Input format
 
 The expected input format is pretty simple and minimalist. It is an array of arrays, each containing the title of the movie and the rating you gave it.
 
@@ -72,7 +71,6 @@ The expected input format is pretty simple and minimalist. It is an array of arr
 ]
 ```
 
-License
--------
+## License
 
-The code is licensed under the MIT license (http://opensource.org/licenses/MIT). See license.txt.
+The code is licensed under the [MIT license](http://choosealicense.com/licenses/mit/). See [LICENSE](LICENSE).
