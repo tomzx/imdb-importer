@@ -13,9 +13,21 @@ class Importer
 		$this->rating_base = $rating_base;
 		if ($rating_base <= 0) {
 			throw new \Exception('Invalid rating base value '.$rating_base.'. Rating base must be positive.');
-		}
+        }
 	}
 
+    /**
+     * Submit ratings to IMDb
+     * @param array $ratings
+     * e.g.
+     * [
+     *  [
+     *      'title' => 'The Matrix', // Name of the film
+     *      'id' => 133093 // If you know it send the imdb ID and that will be used instead of searching
+     *      'rating' => 5,
+     *  ]
+     * ]
+     */
 	public function submit(array $ratings)
 	{
 		// http://www.imdb.com/ratings/_ajax/title
@@ -25,9 +37,12 @@ class Importer
 		// tracking_tag = 'title-maindetails'
 		foreach ($ratings as $rating)
 		{
-			echo 'Fetching submission details for "'.$rating['title'].'"'.PHP_EOL;
-
-			$tconst = $this->get_tconst($rating);
+            if (isset($rating['id'])) {
+                $tconst = $this->formatImdbID($rating['id']);
+            } else {
+                echo "Searching for $rating[title]" . PHP_EOL;
+                $tconst = $this->getIdByTitle($rating['title']);
+            }
 
 			if ($tconst === null) continue;
 
@@ -37,22 +52,22 @@ class Importer
 		}
 	}
 
-	private function get_tconst($rating)
+	private function getIdByTitle($title)
 	{
-		$imdb_title = urlencode($rating['title']);
+		$imdb_title = urlencode($title);
 
 		$content = file_get_contents('http://www.imdb.com/xml/find?json=1&nr=1&tt=on&q='.$imdb_title);
 
 		if ($content === false)
 		{
-			throw new \Exception('Error while fetching tconst for '.$rating['title'].'.');
+			throw new Exception('Error while fetching tconst for '.$title.'.');
 		}
 
 		$json = json_decode($content, true);
 
 		if ($json === null)
 		{
-			throw new \Exception('Could not decode json result for '.$rating['title'].'.');
+			throw new Exception('Could not decode json result for '.$title.'.');
 		}
 
 		// title_popular, title_exact, title_approx
@@ -80,7 +95,7 @@ class Importer
 		foreach ($json[$type] as $movie)
 		{
 			++$i;
-			if (strcasecmp($movie['title'], $rating['title']) === 0)
+			if (strcasecmp($movie['title'], $title) === 0)
 			{
 				$matched_title_index = $i;
 				break;
@@ -89,7 +104,7 @@ class Importer
 
 		if ($matched_title_index === -1)
 		{
-			echo 'Non matching title ' . $rating['title'].PHP_EOL;
+			echo 'Non matching title ' . $title.PHP_EOL;
 			return null;
 		}
 
@@ -101,12 +116,12 @@ class Importer
 		$cookie_details = ['id' => $this->id];
 
 		$context_options = [
-			'http' => [
-				'method' => 'GET',
+            'http' => [
+                'method' => 'GET',
 				'header' => 'Cookie: '.$this->http_build_cookie($cookie_details)
-			]
-		];
-		$context = stream_context_create($context_options);
+            ]
+        ];
+        $context = stream_context_create($context_options);
 
 		$page_url = 'http://www.imdb.com/title/'.$tconst;
 		$page_content = file_get_contents($page_url, false, $context);
@@ -120,7 +135,7 @@ class Importer
 
 	private function submit_rating($rating, $tconst, $auth)
 	{
-		echo 'Submitting rating for '.$rating['title'].PHP_EOL;
+		echo 'Submitting rating for '. isset($rating['title']) ? $rating['title'] : $rating['id'] .PHP_EOL;
 
 		$cookie_details = ['id' => $this->id];
 
@@ -129,14 +144,14 @@ class Importer
 		$data = ['tconst' => $tconst, 'rating' => $imdb_rating, 'auth' => $auth, 'tracking_tag' => 'title-maindetails'];
 		$data = http_build_query($data);
 		$context_options = [
-			'http' => [
-				'method' => 'POST',
-				'header' => 'Cookie: '.$this->http_build_cookie($cookie_details)."\r\n".
-				'Content-type: application/x-www-form-urlencoded'."\r\n".
-				'Content-Length: '.strlen($data),
-				'content' => $data
-			]
-		];
+            'http' => [
+                'method' => 'POST',
+                'header' => 'Cookie: '.$this->http_build_cookie($cookie_details)."\r\n".
+                'Content-type: application/x-www-form-urlencoded'."\r\n".
+                'Content-Length: '.strlen($data),
+                'content' => $data
+            ]
+        ];
 		$context = stream_context_create($context_options);
 
 		$page_url = 'http://www.imdb.com/ratings/_ajax/title';
@@ -154,4 +169,21 @@ class Importer
 		}
 		return $cookie_string;
 	}
+
+    /**
+     * Turn a numerical id into a tt******* formatted string if required
+     * @param string $id
+     */
+    private function formatImdbID($id)
+    {
+        if (strpos($id, 'tt') === 0) {
+            return $id;
+        }
+
+        if (is_numeric($id)) {
+            return 'tt' . str_pad($id,7,'0',STR_PAD_LEFT);
+        }
+
+        throw new \Exception("Failed to validate [$id] as an IMDb ID");
+    }
 }
