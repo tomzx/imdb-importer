@@ -183,6 +183,10 @@ class Importer implements LoggerAwareInterface
         $data_auth_end = strpos($page_content, '"', $data_auth_begin + 11);
         $data_auth = substr($page_content, $data_auth_begin + 11, $data_auth_end - ($data_auth_begin + 11));
 
+        if ( ! $data_auth) {
+            throw new Exception('Could not fetch data auth token.');
+        }
+
         return $data_auth;
     }
 
@@ -220,6 +224,12 @@ class Importer implements LoggerAwareInterface
 
             $page_url = 'http://www.imdb.com/ratings/_ajax/title';
             $page_content = file_get_contents($page_url, false, $context);
+            $page_content = json_decode($page_content, true);
+
+            if ($page_content['status'] !== 200) {
+                $this->getLogger()->error('Could not submit rating for ' . json_encode($rating) . ' status = '. $page_content['status'] . '.');
+                return;
+            }
         }
 
         $this->getLogger()->info('Submitted rating for ' . (isset($rating['title']) ? $rating['title'] : $rating['id']));
