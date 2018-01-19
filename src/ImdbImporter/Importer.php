@@ -116,11 +116,22 @@ class Importer implements LoggerAwareInterface
     {
         $imdb_title = urlencode($title);
 
-        $content = file_get_contents('http://www.imdb.com/xml/find?json=1&nr=1&tt=on&q=' . $imdb_title);
+        $firstCharacter = $title[0];
+        $content = file_get_contents('https://v2.sg.media-imdb.com/suggests/' . $firstCharacter . '/' . $imdb_title . '.json');
 
         if ($content === false) {
             throw new Exception('Error while fetching tconst for ' . $title . '.');
         }
+
+        // Decapsulate the jsonp response
+        $start = strpos($content, '(');
+        $end = strrpos($content, ')');
+
+        if ($start === false || $end === false) {
+            throw new Exception('Result is not in JSONP anymore... This script will need to be updated.');
+        }
+
+        $content = substr($content, $start + 1, $end - $start - 1);
 
         $json = json_decode($content, true);
 
@@ -128,36 +139,15 @@ class Importer implements LoggerAwareInterface
             throw new Exception('Could not decode json result for ' . $title . '.');
         }
 
-        // title_popular, title_exact, title_approx
-        // TODO: If we fail to find the exact title, try the next category until we've gone through them all
-        if (array_key_exists('title_popular', $json)) {
-            $type = 'title_popular';
-        } else if (array_key_exists('title_exact', $json)) {
-            $type = 'title_exact';
-        } else if (array_key_exists('title_approx', $json)) {
-            $type = 'title_approx';
-        } else {
-            $this->getLogger()->warning('Could not find title "' . $title . '"');
-            return null;
-        }
-
-        // Check title matches
-        $matched_title_index = -1;
-        $i = -1;
-        foreach ($json[$type] as $movie) {
-            ++$i;
-            if (strcasecmp($movie['title'], $title) === 0) {
-                $matched_title_index = $i;
-                break;
+        // Check if a title matches
+        foreach ($json['d'] as $suggestion) {
+            if (strcasecmp($suggestion['l'], $title) === 0) {
+                return $suggestion['id'];
             }
         }
 
-        if ($matched_title_index === -1) {
-            $this->getLogger()->warning('Could not find title "' . $title . '"');
-            return null;
-        }
-
-        return $json[$type][$matched_title_index]['id'];
+        $this->getLogger()->warning('Could not find title "' . $title . '"');
+        return null;
     }
 
     /**
