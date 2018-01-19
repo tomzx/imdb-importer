@@ -57,7 +57,7 @@ class Importer implements LoggerAwareInterface
     {
         foreach ($ratings as $rating) {
             if (isset($rating['id'])) {
-                $tconst = $this->formatImdbID($rating['id']);
+                $tconst = $this->formatImdbId($rating['id']);
             } else {
                 $this->getLogger()->debug("Searching for $rating[title]");
                 $tconst = $this->getIdByTitle($rating['title']);
@@ -67,9 +67,9 @@ class Importer implements LoggerAwareInterface
                 continue;
             }
 
-            $auth = $this->get_auth_token($tconst);
+            $auth = $this->getAuthToken($tconst);
 
-            $this->submit_rating($rating, $tconst, $auth);
+            $this->submitRating($rating, $tconst, $auth);
         }
     }
 
@@ -166,14 +166,14 @@ class Importer implements LoggerAwareInterface
      * @param string $tconst
      * @return string
      */
-    private function get_auth_token($tconst)
+    private function getAuthToken($tconst)
     {
         $cookie_details = ['id' => $this->id];
 
         $context_options = [
             'http' => [
                 'method' => 'GET',
-                'header' => 'Cookie: ' . $this->http_build_cookie($cookie_details)
+                'header' => 'Cookie: ' . $this->httpBuildCookie($cookie_details)
             ]
         ];
         $context = stream_context_create($context_options);
@@ -197,7 +197,7 @@ class Importer implements LoggerAwareInterface
      * @param string $tconst
      * @param $auth
      */
-    private function submit_rating(array $rating, $tconst, $auth)
+    private function submitRating(array $rating, $tconst, $auth)
     {
         $this->getLogger()->debug("Submitting rating for " . json_encode($rating) . " $tconst");
 
@@ -216,7 +216,7 @@ class Importer implements LoggerAwareInterface
             $context_options = [
                 'http' => [
                     'method'  => 'POST',
-                    'header'  => 'Cookie: ' . $this->http_build_cookie($cookie_details) . "\r\n" .
+                    'header'  => 'Cookie: ' . $this->httpBuildCookie($cookie_details) . "\r\n" .
                         'Content-type: application/x-www-form-urlencoded' . "\r\n" .
                         'Content-Length: ' . strlen($data),
                     'content' => $data
@@ -241,7 +241,7 @@ class Importer implements LoggerAwareInterface
      * @param array $data
      * @return string
      */
-    private function http_build_cookie(array $data)
+    private function httpBuildCookie(array $data)
     {
         $cookie_string = '';
         foreach ($data as $key => $value) {
@@ -257,7 +257,7 @@ class Importer implements LoggerAwareInterface
      * @return string
      * @throws \Exception
      */
-    private function formatImdbID($id)
+    private function formatImdbId($id)
     {
         if (strpos($id, 'tt') === 0) {
             return $id;
