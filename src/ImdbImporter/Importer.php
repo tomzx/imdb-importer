@@ -114,10 +114,22 @@ class Importer implements LoggerAwareInterface
      */
     private function getIdByTitle($title)
     {
-        $imdb_title = urlencode($title);
+        // Taken from https://stackoverflow.com/a/10064701/108301
+        $normalizeChars = [
+            'Š'=>'S', 'š'=>'s', 'Ð'=>'Dj','Ž'=>'Z', 'ž'=>'z', 'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A',
+            'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E', 'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I',
+            'Ï'=>'I', 'Ñ'=>'N', 'Ń'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O', 'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U', 'Ú'=>'U',
+            'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y', 'Þ'=>'B', 'ß'=>'Ss','à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a',
+            'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e', 'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i',
+            'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ń'=>'n', 'ò'=>'o', 'ó'=>'o', 'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u',
+            'ú'=>'u', 'û'=>'u', 'ü'=>'u', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y', 'ƒ'=>'f',
+            'ă'=>'a', 'ș'=>'s', 'ț'=>'t', 'Ă'=>'A', 'Ș'=>'S', 'Ț'=>'T',
+        ];
 
-        $firstCharacter = $title[0];
-        $content = file_get_contents('https://v2.sg.media-imdb.com/suggests/' . $firstCharacter . '/' . $imdb_title . '.json');
+        $imdb_title = str_replace(' ', '_', strtolower(strtr($title, $normalizeChars)));
+
+        $first_character = $imdb_title[0];
+        $content = file_get_contents('https://v2.sg.media-imdb.com/suggests/' . $first_character . '/' . $imdb_title . '.json');
 
         if ($content === false) {
             throw new Exception('Error while fetching tconst for ' . $title . '.');
