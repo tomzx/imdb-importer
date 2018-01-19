@@ -1,15 +1,15 @@
 # IMDb ratings importer
-
 The IMDb ratings importer is pretty straightforward. It allows you to import your rating from an array onto the website itself.
 
 This importer was written so that I could import my ratings from other movie tracking websites (such as Rotten Tomatoes) onto IMDb.
 
 ## Requirements
-
 * PHP 5.4 <
 
-## How to use
+## Getting started
+`php composer.phar require tomzx/imdb-importer`
 
+## How to use
 In order to use the exporter, you will need to do a couple of things:
 
 1. You need to figure out 2 values that you will need to pass to the constructor of IMDbImporter. The first value is the *id* key/value cookie that you receive when you log onto IMDb. You can get the value by logging into your IMDb account and then finding the *id* key. The second value you need to pass is the rating base of the array you are importing from. For instance, if all the ratings you have in your array are on 5 (such as 3.5 out of 5, 5 out of 5, etc.), then the RATING_BASE would be 5. This way, the script takes care of converting the source rating base into IMDb rating base (which is 10).
@@ -41,7 +41,6 @@ $importer->submit($input);
 ```
 
 ## Example
-
 ```php
 <?php
 require_once 'vendor/autoload.php';
@@ -59,7 +58,6 @@ $importer->submit($input);
 Done! All the movies that are in your input array should be now rated on IMDb.
 
 ## Input format
-
 The expected input format is pretty simple and minimalist. It is an array of arrays, each containing the title of the movie and the rating you gave it.
 
 ```php
@@ -77,5 +75,4 @@ return [
 ```
 
 ## License
-
 The code is licensed under the [MIT license](http://choosealicense.com/licenses/mit/). See [LICENSE](LICENSE).
