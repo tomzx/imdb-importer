@@ -13,6 +13,10 @@ class Importer implements LoggerAwareInterface
      */
     private $id = null;
     /**
+     * @var string|null
+     */
+    private $sid = null;
+    /**
      * @var int
      */
     private $rating_base = 10;
@@ -31,9 +35,10 @@ class Importer implements LoggerAwareInterface
      * @param int $rating_base
      * @throws Exception
      */
-    public function __construct($id, $rating_base = 10)
+    public function __construct($id, $sid, $rating_base = 10)
     {
         $this->id = $id;
+        $this->sid = $sid;
         $this->rating_base = $rating_base;
         if ($rating_base <= 0) {
             throw new Exception('Invalid rating base value ' . $rating_base . '. Rating base must be positive.');
@@ -168,7 +173,7 @@ class Importer implements LoggerAwareInterface
      */
     private function getAuthToken($tconst)
     {
-        $cookie_details = ['id' => $this->id];
+        $cookie_details = ['id' => $this->id, 'sid' => $this->sid];
 
         $context_options = [
             'http' => [
@@ -178,7 +183,7 @@ class Importer implements LoggerAwareInterface
         ];
         $context = stream_context_create($context_options);
 
-        $page_url = 'http://www.imdb.com/title/' . $tconst;
+        $page_url = 'https://www.imdb.com/title/' . $tconst;
         $page_content = file_get_contents($page_url, false, $context);
 
         $data_auth_begin = strpos($page_content, 'data-auth');
@@ -202,7 +207,7 @@ class Importer implements LoggerAwareInterface
         $this->getLogger()->debug("Submitting rating for " . json_encode($rating) . " $tconst");
 
         if ( ! $this->pretend) {
-            $cookie_details = ['id' => $this->id];
+            $cookie_details = ['id' => $this->id, 'sid' => $this->sid];
 
             $imdb_rating = floor($rating['rating'] / $this->rating_base * 10);
 
@@ -224,7 +229,7 @@ class Importer implements LoggerAwareInterface
             ];
             $context = stream_context_create($context_options);
 
-            $page_url = 'http://www.imdb.com/ratings/_ajax/title';
+            $page_url = 'https://www.imdb.com/ratings/_ajax/title';
             $page_content = file_get_contents($page_url, false, $context);
             $page_content = json_decode($page_content, true);
 
