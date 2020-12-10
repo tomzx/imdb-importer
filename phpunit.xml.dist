@@ -2,17 +2,17 @@
 	<testsuite name="Tests">
 		<directory>./tests</directory>
 	</testsuite>
-
-	<filter>
-		<whitelist>
+	<coverage>
+		<include>
 			<directory suffix=".php">./src</directory>
-		</whitelist>
-	</filter>
-
+		</include>
+		<report>
+			<clover outputFile="./log/coverage.xml"/>
+			<html outputDirectory="./log/report" lowUpperBound="50" highLowerBound="80"/>
+			<text outputFile="./log/coverage.txt"/>
+		</report>
+	</coverage>
 	<logging>
-		<log type="coverage-html" target="./log/report" charset="UTF-8" yui="true" highlight="true" lowUpperBound="50" highLowerBound="80" />
-		<log type="coverage-text" target="./log/coverage.txt"/>
-		<log type="coverage-clover" target="./log/coverage.xml"/>
-		<log type="testdox-html" target="./log/testdox.html" />
+		<testdoxHtml outputFile="./log/testdox.html"/>
 	</logging>
 </phpunit>
