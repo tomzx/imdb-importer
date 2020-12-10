@@ -31,5 +31,10 @@
         "psr-4": {
             "ImdbImporter\\": "src/ImdbImporter"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ImdbImporter\\Tests\\": "tests/ImdbImporter"
+        }
     }
 }
