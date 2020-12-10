@@ -4,7 +4,7 @@ The IMDb ratings importer is pretty straightforward. It allows you to import you
 This importer was written so that I could import my ratings from other movie tracking websites (such as Rotten Tomatoes) onto IMDb.
 
 ## Requirements
-* PHP 5.4 <
+* PHP >= 7.3
 
 ## Getting started
 `php composer.phar require tomzx/imdb-importer`
