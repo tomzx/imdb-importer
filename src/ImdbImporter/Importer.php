@@ -129,7 +129,7 @@ class Importer implements LoggerAwareInterface
         $imdb_title = str_replace(' ', '_', strtolower(strtr($title, $normalizeChars)));
 
         $first_character = $imdb_title[0];
-        $content = file_get_contents('https://v2.sg.media-imdb.com/suggests/' . $first_character . '/' . $imdb_title . '.json');
+        $content = $this->httpRequest('https://v2.sg.media-imdb.com/suggests/' . $first_character . '/' . $imdb_title . '.json');
 
         if ($content === false) {
             throw new Exception('Error while fetching tconst for ' . $title . '.');
@@ -179,7 +179,7 @@ class Importer implements LoggerAwareInterface
         $context = stream_context_create($context_options);
 
         $page_url = 'http://www.imdb.com/title/' . $tconst;
-        $page_content = file_get_contents($page_url, false, $context);
+        $page_content = $this->httpRequest($page_url, $context);
 
         $data_auth_begin = strpos($page_content, 'data-auth');
         $data_auth_end = strpos($page_content, '"', $data_auth_begin + 11);
@@ -225,7 +225,7 @@ class Importer implements LoggerAwareInterface
             $context = stream_context_create($context_options);
 
             $page_url = 'http://www.imdb.com/ratings/_ajax/title';
-            $page_content = file_get_contents($page_url, false, $context);
+            $page_content = $this->httpRequest($page_url, $context);
             $page_content = json_decode($page_content, true);
 
             if ($page_content['status'] !== 200) {
@@ -235,6 +235,16 @@ class Importer implements LoggerAwareInterface
         }
 
         $this->getLogger()->info('Submitted rating for ' . (isset($rating['title']) ? $rating['title'] : $rating['id']));
+    }
+
+    /**
+     * @param string $url
+     * @param resource|null $context
+     * @return string
+     */
+    protected function httpRequest($url, $context = null)
+    {
+        return file_get_contents($url, false, $context);
     }
 
     /**
